@@ -1,6 +1,10 @@
 const graphql = require('graphql');
 const _ = require('lodash');
 
+// MongoDB Model
+const Movie = require('../models/Movie');
+const Director = require('../models/Director');
+
 const { 
     GraphQLID, 
     GraphQLObjectType, 
@@ -8,7 +12,9 @@ const {
     GraphQLInt, 
     GraphQLSchema,
     GraphQLList
- } = graphql;
+} = graphql;
+
+
 
 const MovieType = new GraphQLObjectType({
     name: 'Movie',
@@ -32,7 +38,7 @@ const DirectorType = new GraphQLObjectType({
         name: { type: GraphQLString},
         birth: { type: GraphQLInt},
         movies: {
-            type: GraphQLList(MovieType),
+            type: new GraphQLList(MovieType),
             resolve(parent, args) {
                 return _.filter(movies, { directorId: parent.id });
             }
@@ -56,6 +62,12 @@ const RootQuery = new GraphQLObjectType({
             args: { id: { type: GraphQLID } },
             resolve(parent, args){
                 return _.find(directors, { id: args.id })
+            }
+        },
+        movies: {
+            type: new GraphQLList(MovieType),
+            resolve(parent, args) {
+                return movies
             }
         }
     }
