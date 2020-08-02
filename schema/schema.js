@@ -26,7 +26,7 @@ const MovieType = new GraphQLObjectType({
         director: {
             type: DirectorType,
             resolve(parent, args) {
-                return _.find(directors, { id: parent.directorId });
+                return Movie.findById(parent.directorId)
             }
         }
     })
@@ -40,7 +40,7 @@ const DirectorType = new GraphQLObjectType({
         movies: {
             type: new GraphQLList(MovieType),
             resolve(parent, args) {
-                return _.filter(movies, { directorId: parent.id });
+                return Movie.find({ directorId: parent.id })
             }
         }
     })
@@ -54,20 +54,64 @@ const RootQuery = new GraphQLObjectType({
             args: { id: { type: GraphQLID } },
             resolve(parent, args){
                 // get data
-                return _.find(movies, { id: args.id })
+                return Movie.findById(args.id)
             } 
         },
         director: {
             type: DirectorType,
             args: { id: { type: GraphQLID } },
             resolve(parent, args){
-                return _.find(directors, { id: args.id })
+                return Director.findById(args.id)
             }
         },
         movies: {
             type: new GraphQLList(MovieType),
             resolve(parent, args) {
-                return movies
+                return Movie.find({})
+            }
+        },
+        directors: {
+            type: new GraphQLList(DirectorType),
+            resolve(parent, args) {
+                return Director.find({})
+            }
+        }
+    }
+})
+
+const Mutation = new GraphQLObjectType({
+    name: 'Mutation',
+    fields: {
+        addMovie: {
+            type: MovieType,
+            args: {
+                title: { type: GraphQLString },
+                description: { type: GraphQLString },
+                year: { type: GraphQLInt },
+                directorId: { type: GraphQLString }
+            },
+            resolve(parent, args) {
+                const movie = new Movie({
+                    title: args.title,
+                    description: args.description,
+                    year: args.year,
+                    directorId: args.directorId
+                })
+                return movie.save();
+            }
+        },
+        addDirector: {
+            type: DirectorType,
+            args: {
+                name: { type: GraphQLString },
+                birth: { type: GraphQLInt }
+            },
+            resolve(parent, args) {
+                const director = new Director({
+                    name: args.name,
+                    birth: args.birth
+                })
+                return director.save();
             }
         }
     }
@@ -116,5 +160,6 @@ const directors = [
 ];
 
 module.exports = new GraphQLSchema({
-    query: RootQuery
+    query: RootQuery,
+    mutation: Mutation
 })
